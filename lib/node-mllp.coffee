@@ -5,13 +5,33 @@ startBlock     = 0x0B
 endBlock       = 0x1C
 carriageReturn = 0x0D
 
-class ServerRequest extends EventEmitter
-  constructor: () ->
+extend = (obj, mixin) ->
+  obj[name] = method for name, method of mixin        
+  obj
 
+include = (klass, mixin) ->
+  extend klass.prototype, mixin
+
+Encoded =
   setEncoding: (@encoding) ->
-
   getEncoding: () ->
-    @encoding
+    @encoding  
+
+MllpWriter =
+  write: (data) ->
+    @writeStart() unless @started
+    @socket.write data
+
+  end: (data) ->
+    @write(data) if data
+    @socket.write '\x1C'
+    @socket.write '\x0D'
+
+class ServerRequest extends EventEmitter
+class ClientResponse extends EventEmitter
+
+include(ServerRequest, Encoded)
+include(ClientResponse, Encoded)
 
 class ServerResponse
   constructor: (@socket) ->
@@ -21,15 +41,6 @@ class ServerResponse
       @socket.write '\x0B'
       @started = true
 
-  write: (data) ->
-    @writeStart() unless @started
-    @socket.write data
-
-  end: (data) ->
-    @write(data) if data
-    @socket.write '\x1C'
-    @socket.write '\x0D'
-
 class ClientRequest
   constructor: (@socket) ->
     @started = false
@@ -38,22 +49,9 @@ class ClientRequest
       @socket.write '\x0B'
       @started = true
 
-  write: (data) ->
-    @writeStart() unless @started
-    @socket.write data
+include(ServerResponse, MllpWriter)
+include(ClientRequest, MllpWriter)
 
-  end: (data) ->
-    @write(data) if data
-    @socket.write '\x1C'
-    @socket.write '\x0D'
-
-class ClientResponse extends EventEmitter
-  constructor: () ->
-
-  setEncoding: (@encoding) ->
-
-  getEncoding: () ->
-    @encoding
 
 class ClientConnection
   constructor: (@socket) ->
