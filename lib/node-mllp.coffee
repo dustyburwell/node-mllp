@@ -62,7 +62,7 @@ class ClientConnection
   request: (callback) ->
     response = null
 
-    ondata = (data) ->
+    ondata = (data) =>
       for char, index in data
         if char is startBlock
           callback(response = new ClientResponse())
@@ -91,9 +91,9 @@ class ClientConnection
 
         response.emit('data', slice)
 
-    return new ClientRequest(@socket)
-
     @socket.on 'data', ondata
+
+    return new ClientRequest(@socket)
 
 class MllpServer
   constructor: (callback) ->
