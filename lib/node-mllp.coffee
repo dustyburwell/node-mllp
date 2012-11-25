@@ -1,9 +1,8 @@
 net = require 'net'
 {EventEmitter} = require 'events'
-
-startBlock     = 0x0B
-endBlock       = 0x1C
-carriageReturn = 0x0D
+MllpWriter = require './mllpwriter'
+{ startBlock, endBlock, carriageReturn } = require './constants'
+{ ServerResponse, ServerRequest } = require './server'
 
 extend = (obj, mixin) ->
   obj[name] = method for name, method of mixin        
@@ -12,46 +11,20 @@ extend = (obj, mixin) ->
 include = (klass, mixin) ->
   extend klass.prototype, mixin
 
-Encoded =
+class Encoded extends EventEmitter
   setEncoding: (@encoding) ->
   getEncoding: () ->
     @encoding  
 
-MllpWriter =
-  write: (data) ->
-    @writeStart() unless @started
-    @socket.write data
+class ClientResponse extends Encoded
 
-  end: (data) ->
-    @write(data) if data
-    @socket.write '\x1C'
-    @socket.write '\x0D'
-
-class ServerRequest extends EventEmitter
-class ClientResponse extends EventEmitter
-
-include(ServerRequest, Encoded)
-include(ClientResponse, Encoded)
-
-class ServerResponse
+class ClientRequest extends MllpWriter
   constructor: (@socket) ->
     @started = false
 
     @writeStart = =>
       @socket.write '\x0B'
       @started = true
-
-class ClientRequest
-  constructor: (@socket) ->
-    @started = false
-
-    @writeStart = =>
-      @socket.write '\x0B'
-      @started = true
-
-include(ServerResponse, MllpWriter)
-include(ClientRequest, MllpWriter)
-
 
 class ClientConnection
   constructor: (@socket) ->
