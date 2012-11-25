@@ -3,28 +3,7 @@ net = require 'net'
 MllpWriter = require './mllpwriter'
 { startBlock, endBlock, carriageReturn } = require './constants'
 { ServerResponse, ServerRequest } = require './server'
-
-extend = (obj, mixin) ->
-  obj[name] = method for name, method of mixin        
-  obj
-
-include = (klass, mixin) ->
-  extend klass.prototype, mixin
-
-class Encoded extends EventEmitter
-  setEncoding: (@encoding) ->
-  getEncoding: () ->
-    @encoding  
-
-class ClientResponse extends Encoded
-
-class ClientRequest extends MllpWriter
-  constructor: (@socket) ->
-    @started = false
-
-    @writeStart = =>
-      @socket.write '\x0B'
-      @started = true
+{ ClientRequest, ClientResponse } = require './client'
 
 class ClientConnection
   constructor: (@socket) ->
